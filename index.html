@@ -1,0 +1,2742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneG HCM Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --accent: #22d3ee;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-pink: #ec4899;
+            --accent-red: #ef4444;
+            --bg-dark: #0a0a1a;
+            --bg-darker: #050510;
+            --bg-card: rgba(17, 24, 39, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.12);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+        
+        /* Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 10% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 90%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
+                var(--bg-dark);
+        }
+        
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.5;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); } 50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .reveal-left.active { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .reveal-right.active { opacity: 1; transform: translateX(0); }
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 0.75rem 2rem;
+            background: rgba(10, 10, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        nav.scrolled {
+            padding: 0.5rem 2rem;
+            background: rgba(5, 5, 16, 0.95);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 38px; height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .tech-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-logo.color {
+            filter: none;
+        }
+        
+        .card:hover .tech-logo {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .integration-logo-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        
+        .marketplace-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        
+        .nav-menu { display: flex; gap: 0.5rem; align-items: center; }
+        
+        .nav-item { position: relative; }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active { color: var(--text-primary); background: var(--bg-glass); }
+        .nav-link svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+        .nav-item:hover .nav-link svg { transform: rotate(180deg); }
+        
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 280px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        
+        .nav-item:hover .dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+        
+        .dropdown-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            background: var(--bg-glass);
+        }
+        
+        .dropdown-title { font-weight: 500; font-size: 0.9rem; color: var(--text-primary); }
+        .dropdown-desc { font-size: 0.75rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="grid-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <style>
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        /* Buttons */
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+        
+        .btn-outline:hover { background: var(--bg-glass); border-color: var(--primary); }
+        
+        /* Sections */
+        section {
+            padding: 100px 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-intro {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.8;
+        }
+        
+        .section-intro-highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 2rem;
+            position: relative;
+        }
+        
+        .hero-content { max-width: 900px; }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .hero-badge-dot {
+            width: 8px; height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+        
+        .hero-title-gradient {
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 80px;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+        
+        .hero-stat { text-align: center; }
+        .hero-stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+        .hero-stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-light);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card:hover::before { opacity: 1; }
+        
+        .card-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .card-features {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .card-feature {
+            padding: 4px 12px;
+            background: var(--bg-glass);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Module Categories */
+        .module-category {
+            margin-bottom: 60px;
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .category-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .category-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+</style>
+
+    <style>
+        /* Architecture Diagram */
+        .architecture-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+        }
+        
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .arch-layer:hover {
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
+        
+        .arch-layer-num {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        
+        .arch-layer-content { flex: 1; }
+        .arch-layer-title { font-weight: 600; margin-bottom: 4px; }
+        .arch-layer-desc { font-size: 0.9rem; color: var(--text-secondary); }
+        
+        .arch-connector {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        
+        .arch-connector svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-muted);
+        }
+        
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .service-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .service-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .service-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin: 0 auto 12px;
+        }
+        
+        .service-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .service-port {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Folder Structure - Clean Visual Design */
+        .folder-structure {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .folder-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .folder-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px;
+            background: var(--bg-glass);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .folder-panel-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .folder-panel-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .folder-panel-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .folder-tree {
+            padding: 20px 24px;
+        }
+        
+        .folder-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+        
+        .folder-item:hover {
+            background: var(--bg-glass);
+        }
+        
+        .folder-item.indent-1 { margin-left: 24px; }
+        .folder-item.indent-2 { margin-left: 48px; }
+        .folder-item.indent-3 { margin-left: 72px; }
+        
+        .folder-icon {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        
+        .folder-icon.folder { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+        .folder-icon.file { background: rgba(99, 102, 241, 0.15); color: var(--primary-light); }
+        .folder-icon.config { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .folder-icon.service { background: rgba(236, 72, 153, 0.15); color: var(--accent-pink); }
+        
+        .folder-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .folder-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        
+        /* Integrations Section */
+        .integrations-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        
+        .integration-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .integration-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, transparent 50%, rgba(99, 102, 241, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .integration-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+        }
+        
+        .integration-card:hover::after { opacity: 1; }
+        
+        .integration-logo {
+            width: 80px; height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .integration-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .integration-type {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .integration-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Marketplace */
+        .marketplace-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .marketplace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .marketplace-item {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .marketplace-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+        }
+        
+        .marketplace-item.hidden {
+            display: none;
+        }
+        
+        .marketplace-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 16px;
+        }
+        
+        .marketplace-name {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .marketplace-category {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+</style>
+
+    <style>
+        /* AI Section */
+        .ai-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(34, 211, 238, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 60px 40px;
+            margin: 60px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ai-section::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .ai-header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .ai-badge svg {
+            width: 18px; height: 18px;
+            animation: pulse 2s infinite;
+        }
+        
+        .ai-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        
+        .ai-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .ai-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .ai-feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .ai-feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 4px 0 0 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .ai-feature-card:hover {
+            transform: translateX(8px);
+            border-color: var(--primary);
+        }
+        
+        .ai-feature-card:hover::before { opacity: 1; }
+        
+        .ai-feature-icon {
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 18px;
+        }
+        
+        .ai-feature-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .ai-feature-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .ai-feature-module {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 4px 12px;
+            background: var(--bg-glass);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent);
+        }
+        
+        /* Security Layers Visual */
+        .security-visual {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+        }
+        
+        .security-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .security-layer {
+            display: flex;
+            align-items: stretch;
+            gap: 20px;
+            padding: 24px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .security-layer::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .security-layer:hover {
+            transform: scale(1.02);
+            border-color: transparent;
+        }
+        
+        .security-layer:hover::before { width: 100%; opacity: 0.1; }
+        
+        .security-layer.layer-1::before { background: var(--accent); }
+        .security-layer.layer-2::before { background: var(--accent-green); }
+        .security-layer.layer-3::before { background: var(--accent-orange); }
+        .security-layer.layer-4::before { background: var(--accent-pink); }
+        
+        .security-layer-badge {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .security-layer-content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .security-layer-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+        
+        .security-layer-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .security-layer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .security-tag {
+            padding: 4px 10px;
+            background: var(--bg-glass);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Operations Section */
+        .ops-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .ops-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+        
+        .ops-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+        }
+        
+        .ops-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+        }
+        
+        .ops-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .ops-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 60px 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .footer-desc {
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover { color: var(--text-primary); }
+        
+        .footer-copy {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.8rem; }
+            .section-title { font-size: 2.2rem; }
+            .hero-stats { flex-direction: column; gap: 30px; }
+            .hero-buttons { flex-direction: column; }
+            .nav-menu { display: none; }
+            .folder-structure { grid-template-columns: 1fr; }
+            section { padding: 60px 1rem; }
+        }
+    </style>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Outer blue circle -->
+                        <circle fill="#0262CE" opacity="1.000000" cx="85" cy="85" r="85"/>
+<path fill="#FCFDFE" opacity="1.000000" stroke="none" 
+	d="
+M113.881172,43.019569 
+	C90.264648,30.178478 64.684189,34.045605 48.058449,52.726799 
+	C34.858883,67.558228 32.072502,91.197632 41.385361,109.340706 
+	C50.738903,127.563042 70.842735,138.549789 90.950676,136.420853 
+	C110.832100,134.315887 125.166649,124.462334 133.300430,106.012535 
+	C134.083359,104.236649 134.581955,102.335403 135.393738,99.962784 
+	C118.782120,99.962784 102.833885,99.962784 86.603561,99.962784 
+	C86.603561,93.339470 86.603561,87.077477 86.603561,80.435883 
+	C111.160164,80.435883 135.701385,80.435883 160.242233,80.435883 
+	C163.302979,114.552216 140.748764,149.091629 103.432854,157.950897 
+	C66.442032,166.733002 28.771688,145.612122 16.506569,109.184753 
+	C4.347583,73.072617 22.413317,33.109261 57.723087,18.009363 
+	C92.474304,3.148329 133.437683,17.290405 151.412231,50.778969 
+	C144.918335,54.290916 138.415344,57.807789 132.816299,60.835804 
+	C126.346870,54.716988 120.267281,48.966877 113.881172,43.019569 
+z"/>
+                    </svg>
+                </div>
+                <span>OneG</span>
+            </a>
+            <div class="nav-menu">
+                <div class="nav-item">
+                    <a href="#product" class="nav-link">
+                        Product
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#core-hcm" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">👥</div>
+                            <div>
+                                <div class="dropdown-title">Core HCM</div>
+                                <div class="dropdown-desc">Employee data & organization</div>
+                            </div>
+                        </a>
+                        <a href="#talent" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">⭐</div>
+                            <div>
+                                <div class="dropdown-title">Talent Management</div>
+                                <div class="dropdown-desc">Performance & development</div>
+                            </div>
+                        </a>
+                        <a href="#time-payroll" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">⏱️</div>
+                            <div>
+                                <div class="dropdown-title">Time & Payroll</div>
+                                <div class="dropdown-desc">Time tracking & compensation</div>
+                            </div>
+                        </a>
+                        <a href="#ai-features" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">🤖</div>
+                            <div>
+                                <div class="dropdown-title">AI Features</div>
+                                <div class="dropdown-desc">Intelligent automation</div>
+                            </div>
+                        </a>
+                        <a href="#integrations" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🔗</div>
+                            <div>
+                                <div class="dropdown-title">Integrations</div>
+                                <div class="dropdown-desc">External systems & marketplace</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#technology" class="nav-link">
+                        Technology
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#architecture" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">🏗️</div>
+                            <div>
+                                <div class="dropdown-title">Architecture</div>
+                                <div class="dropdown-desc">Microservices & API Gateway</div>
+                            </div>
+                        </a>
+                        <a href="#security" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🔒</div>
+                            <div>
+                                <div class="dropdown-title">Security</div>
+                                <div class="dropdown-desc">4-layer defense model</div>
+                            </div>
+                        </a>
+                        <a href="#tech-stack" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">⚡</div>
+                            <div>
+                                <div class="dropdown-title">Tech Stack</div>
+                                <div class="dropdown-desc">React, Fastify, PostgreSQL</div>
+                            </div>
+                        </a>
+                        <a href="#operations" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">📊</div>
+                            <div>
+                                <div class="dropdown-title">Operations</div>
+                                <div class="dropdown-desc">Monitoring & observability</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#structure" class="nav-link">
+                        Structure
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#frontend-structure" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🎨</div>
+                            <div>
+                                <div class="dropdown-title">Frontend</div>
+                                <div class="dropdown-desc">React SPA structure</div>
+                            </div>
+                        </a>
+                        <a href="#backend-structure" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">⚙️</div>
+                            <div>
+                                <div class="dropdown-title">Backend</div>
+                                <div class="dropdown-desc">Microservices layout</div>
+                            </div>
+                        </a>
+                        <a href="#database-schema" class="dropdown-item">
+                            <div class="dropdown-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">🗄️</div>
+                            <div>
+                                <div class="dropdown-title">Database</div>
+                                <div class="dropdown-desc">Schema-per-service</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <a href="#" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                Enterprise HCM Platform
+            </div>
+            <h1 class="hero-title">
+                The Future of<br>
+                <span class="hero-title-gradient">Human Capital Management</span>
+            </h1>
+            <p class="hero-subtitle">
+                A comprehensive, AI-powered enterprise platform built with modern microservices architecture. 
+                Manage your entire workforce lifecycle with security, scalability, and intelligence.
+            </p>
+            <div class="hero-buttons">
+                <a href="#product" class="btn btn-primary">
+                    Explore Platform
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#technology" class="btn btn-outline">View Architecture</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">18</div>
+                    <div class="hero-stat-label">Microservices</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">13+</div>
+                    <div class="hero-stat-label">HR Modules</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">4</div>
+                    <div class="hero-stat-label">Security Layers</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">20+</div>
+                    <div class="hero-stat-label">Languages</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Section -->
+    <section id="product">
+        <div class="section-header reveal">
+            <div class="section-badge">📦 Product Overview</div>
+            <h2 class="section-title">Complete HR Solution</h2>
+            <p class="section-intro">
+                OneG delivers a <span class="section-intro-highlight">unified platform</span> that transforms how organizations manage their workforce. 
+                From hire to retire, every aspect of the employee journey is covered with <span class="section-intro-highlight">intelligent automation</span>, 
+                real-time analytics, and seamless integrations. Built for enterprises that demand security, scalability, and exceptional user experience.
+            </p>
+        </div>
+
+        <!-- Core HCM -->
+        <div id="core-hcm" class="module-category reveal">
+            <div class="category-header">
+                <div class="category-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">👥</div>
+                <div>
+                    <h3 class="category-title">Core HCM</h3>
+                    <p class="category-desc">Foundation modules for employee data and organizational management</p>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">👤</div>
+                    <h4 class="card-title">HCM (Human Capital Management)</h4>
+                    <p class="card-desc">Core employee data with encrypted PII, organizational structure, positions, companies, cost centers, locations, and job profiles.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Employee Profiles</span>
+                        <span class="card-feature">Org Charts</span>
+                        <span class="card-feature">Star Recognition</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🎯</div>
+                    <h4 class="card-title">Recruitment</h4>
+                    <p class="card-desc">Complete talent acquisition with job requisitions, ATS, candidate portals, interview scheduling, and onboarding workflows.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Job Portal</span>
+                        <span class="card-feature">ATS</span>
+                        <span class="card-feature">Career Site</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-3">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">💰</div>
+                    <h4 class="card-title">Compensation</h4>
+                    <p class="card-desc">Salary management with compensation grades, pay elements, salary bands, multi-currency support, and merit planning.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Salary Bands</span>
+                        <span class="card-feature">Merit Planning</span>
+                        <span class="card-feature">Benchmarking</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-4">
+                    <div class="card-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">🏖️</div>
+                    <h4 class="card-title">Time Off & Absence</h4>
+                    <p class="card-desc">Leave management with multiple leave types, balance tracking, accruals, holiday calendars, and compliance with labor laws.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Leave Requests</span>
+                        <span class="card-feature">Accruals</span>
+                        <span class="card-feature">Compliance</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🎁</div>
+                    <h4 class="card-title">Benefits</h4>
+                    <p class="card-desc">Benefits administration with enrollment management, multiple plan types, life events, carrier integrations, and COBRA.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Open Enrollment</span>
+                        <span class="card-feature">Dependents</span>
+                        <span class="card-feature">Life Events</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🎫</div>
+                    <h4 class="card-title">Ticketing System</h4>
+                    <p class="card-desc">HR support system with ticket management, SLA tracking, knowledge base integration, and escalation workflows.</p>
+                    <div class="card-features">
+                        <span class="card-feature">SLA Tracking</span>
+                        <span class="card-feature">Knowledge Base</span>
+                        <span class="card-feature">Escalations</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Talent Management -->
+        <div id="talent" class="module-category reveal">
+            <div class="category-header">
+                <div class="category-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">⭐</div>
+                <div>
+                    <h3 class="category-title">Talent Management</h3>
+                    <p class="category-desc">Performance, development, and learning modules</p>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">📈</div>
+                    <h4 class="card-title">Talent & Performance</h4>
+                    <p class="card-desc">Performance reviews, goal setting (OKRs), 360-degree feedback, development plans, succession planning, and 9-box grids.</p>
+                    <div class="card-features">
+                        <span class="card-feature">OKRs</span>
+                        <span class="card-feature">360 Feedback</span>
+                        <span class="card-feature">Succession</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">📚</div>
+                    <h4 class="card-title">Learning</h4>
+                    <p class="card-desc">Training and development with course catalog, learning paths, certifications, compliance training, and LMS integration.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Course Catalog</span>
+                        <span class="card-feature">Certifications</span>
+                        <span class="card-feature">Skills Tracking</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-3">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">📊</div>
+                    <h4 class="card-title">Reports & Analytics</h4>
+                    <p class="card-desc">Pre-built dashboards, custom report builder, workforce analytics, turnover analysis, and scheduled report delivery.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Dashboards</span>
+                        <span class="card-feature">Custom Reports</span>
+                        <span class="card-feature">Export</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-4">
+                    <div class="card-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">💎</div>
+                    <h4 class="card-title">Advanced Compensation</h4>
+                    <p class="card-desc">Variable compensation, stock options, RSUs, ESPP, long-term incentives, and sales commission management.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Equity Grants</span>
+                        <span class="card-feature">Commissions</span>
+                        <span class="card-feature">LTIP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time & Payroll -->
+        <div id="time-payroll" class="module-category reveal">
+            <div class="category-header">
+                <div class="category-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">⏱️</div>
+                <div>
+                    <h3 class="category-title">Time & Payroll</h3>
+                    <p class="category-desc">Time tracking, payroll processing, and project cost allocation</p>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">⏰</div>
+                    <h4 class="card-title">Time Tracking & Attendance</h4>
+                    <p class="card-desc">Clock in/out with geofencing, digital timesheets, shift scheduling, attendance monitoring, and AI-powered anomaly detection.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Geofencing</span>
+                        <span class="card-feature">AI Scheduling</span>
+                        <span class="card-feature">Mobile</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">💵</div>
+                    <h4 class="card-title">Payroll</h4>
+                    <p class="card-desc">Complete payroll processing with tax calculations, direct deposit, multi-jurisdiction support, and year-end processing.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Tax Compliance</span>
+                        <span class="card-feature">Direct Deposit</span>
+                        <span class="card-feature">W-2/1099</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-3">
+                    <div class="card-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">📁</div>
+                    <h4 class="card-title">Projects & Cost Allocation</h4>
+                    <p class="card-desc">Project costing with AI-powered allocation suggestions, grant management, burden calculations, and multi-dimensional reporting.</p>
+                    <div class="card-features">
+                        <span class="card-feature">AI Allocation</span>
+                        <span class="card-feature">Grant Tracking</span>
+                        <span class="card-feature">Forecasting</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Features Section -->
+    <section id="ai-features">
+        <div class="ai-section reveal">
+            <div class="ai-header">
+                <div class="ai-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    Artificial Intelligence
+                </div>
+                <h2 class="ai-title">AI-Powered Intelligence</h2>
+                <p class="ai-subtitle">
+                    Leverage machine learning and intelligent automation to transform HR operations, 
+                    reduce manual work, and make data-driven decisions across every module.
+                </p>
+            </div>
+            
+            <!-- Recruitment AI -->
+            <h3 style="color: var(--accent); font-size: 1.3rem; margin: 40px 0 20px; text-align: center;">🎯 Recruitment AI</h3>
+            <div class="ai-features-grid">
+                <div class="ai-feature-card reveal stagger-1">
+                    <div class="ai-feature-icon">📄</div>
+                    <h4 class="ai-feature-title">CV/Resume Evaluation</h4>
+                    <p class="ai-feature-desc">AI scoring of candidate CVs against job requisition requirements with match percentage and skill gap analysis.</p>
+                    <span class="ai-feature-module">Recruitment</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-2">
+                    <div class="ai-feature-icon">🔗</div>
+                    <h4 class="ai-feature-title">LinkedIn Integration</h4>
+                    <p class="ai-feature-desc">Automatically search, contact, and schedule interviews with candidates from LinkedIn and other platforms.</p>
+                    <span class="ai-feature-module">Recruitment</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-3">
+                    <div class="ai-feature-icon">🔍</div>
+                    <h4 class="ai-feature-title">Talent Pool Mining</h4>
+                    <p class="ai-feature-desc">Search internal CV database to find matching candidates for new requisitions and auto-contact them.</p>
+                    <span class="ai-feature-module">Recruitment</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-4">
+                    <div class="ai-feature-icon">📱</div>
+                    <h4 class="ai-feature-title">WhatsApp/SMS Automation</h4>
+                    <p class="ai-feature-desc">Automated conversations to engage candidates, schedule interviews, collect information, and manage processes.</p>
+                    <span class="ai-feature-module">Recruitment • Onboarding</span>
+                </div>
+            </div>
+
+            <!-- Time & Cost AI -->
+            <h3 style="color: var(--accent-orange); font-size: 1.3rem; margin: 40px 0 20px; text-align: center;">⏱️ Time & Cost Intelligence</h3>
+            <div class="ai-features-grid">
+                <div class="ai-feature-card reveal stagger-1">
+                    <div class="ai-feature-icon">🗓️</div>
+                    <h4 class="ai-feature-title">AI Scheduling</h4>
+                    <p class="ai-feature-desc">Intelligent shift recommendations based on historical patterns, employee preferences, and optimal coverage prediction.</p>
+                    <span class="ai-feature-module">Time Tracking</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-2">
+                    <div class="ai-feature-icon">🔍</div>
+                    <h4 class="ai-feature-title">Timesheet Anomaly Detection</h4>
+                    <p class="ai-feature-desc">Automatic detection of unusual patterns, missing punches, and potential errors in time entries using ML algorithms.</p>
+                    <span class="ai-feature-module">Time Tracking</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-3">
+                    <div class="ai-feature-icon">💬</div>
+                    <h4 class="ai-feature-title">Conversational Time Entry</h4>
+                    <p class="ai-feature-desc">Natural language time tracking - simply say "I worked 8 hours on Project X" and let AI handle the rest.</p>
+                    <span class="ai-feature-module">Time Tracking</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-4">
+                    <div class="ai-feature-icon">📊</div>
+                    <h4 class="ai-feature-title">Cost Allocation Suggestions</h4>
+                    <p class="ai-feature-desc">Auto-suggest cost allocations based on historical patterns and automatically distribute hours for missing allocations.</p>
+                    <span class="ai-feature-module">Projects & Cost Allocation</span>
+                </div>
+            </div>
+
+            <!-- Workforce Intelligence -->
+            <h3 style="color: var(--accent-green); font-size: 1.3rem; margin: 40px 0 20px; text-align: center;">👥 Workforce Intelligence</h3>
+            <div class="ai-features-grid">
+                <div class="ai-feature-card reveal stagger-1">
+                    <div class="ai-feature-icon">📉</div>
+                    <h4 class="ai-feature-title">Attrition Prediction</h4>
+                    <p class="ai-feature-desc">Predict flight risk for employees based on engagement, performance, compensation, and market data.</p>
+                    <span class="ai-feature-module">HCM • Talent</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-2">
+                    <div class="ai-feature-icon">😊</div>
+                    <h4 class="ai-feature-title">Sentiment Analysis</h4>
+                    <p class="ai-feature-desc">Analyze feedback and communications to gauge employee satisfaction and identify potential issues early.</p>
+                    <span class="ai-feature-module">HCM • Talent • Ticketing</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-3">
+                    <div class="ai-feature-icon">🎯</div>
+                    <h4 class="ai-feature-title">Skills Gap Analysis</h4>
+                    <p class="ai-feature-desc">Identify skill gaps across the organization and recommend targeted training or strategic hiring.</p>
+                    <span class="ai-feature-module">HCM • Learning</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-4">
+                    <div class="ai-feature-icon">⭐</div>
+                    <h4 class="ai-feature-title">High Potential Identification</h4>
+                    <p class="ai-feature-desc">Automatically identify high-potential employees for accelerated development and succession planning.</p>
+                    <span class="ai-feature-module">Talent • HCM</span>
+                </div>
+            </div>
+
+            <!-- Analytics & Automation -->
+            <h3 style="color: var(--accent-pink); font-size: 1.3rem; margin: 40px 0 20px; text-align: center;">🤖 Analytics & Automation</h3>
+            <div class="ai-features-grid">
+                <div class="ai-feature-card reveal stagger-1">
+                    <div class="ai-feature-icon">💭</div>
+                    <h4 class="ai-feature-title">Natural Language Queries</h4>
+                    <p class="ai-feature-desc">Ask questions in plain English - "Show me turnover by department last quarter" - and get instant answers.</p>
+                    <span class="ai-feature-module">Reports</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-2">
+                    <div class="ai-feature-icon">🎫</div>
+                    <h4 class="ai-feature-title">Smart Ticket Routing</h4>
+                    <p class="ai-feature-desc">Auto-categorize tickets, route to best-suited agents, and suggest responses based on similar resolved cases.</p>
+                    <span class="ai-feature-module">Ticketing</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-3">
+                    <div class="ai-feature-icon">📚</div>
+                    <h4 class="ai-feature-title">Personalized Learning Paths</h4>
+                    <p class="ai-feature-desc">AI-curated learning recommendations based on role, skills, career goals, and peer learning patterns.</p>
+                    <span class="ai-feature-module">Learning</span>
+                </div>
+                <div class="ai-feature-card reveal stagger-4">
+                    <div class="ai-feature-icon">💰</div>
+                    <h4 class="ai-feature-title">Pay Equity Detection</h4>
+                    <p class="ai-feature-desc">Identify pay disparities across gender, ethnicity, and other demographics with actionable recommendations.</p>
+                    <span class="ai-feature-module">Compensation</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section id="integrations">
+        <div class="section-header reveal">
+            <div class="section-badge">🔗 Integrations</div>
+            <h2 class="section-title">Connected Ecosystem</h2>
+            <p class="section-intro">
+                OneG seamlessly integrates with <span class="section-intro-highlight">enterprise systems</span> you already use. 
+                From HCM data synchronization with Workday to workflow orchestration with Temporal, 
+                our platform connects your entire HR technology stack with <span class="section-intro-highlight">resilient, secure integrations</span>.
+            </p>
+        </div>
+
+        <div class="integrations-showcase">
+            <div class="integration-card reveal stagger-1">
+                <div class="integration-logo" style="background: linear-gradient(135deg, rgba(0, 82, 147, 0.2), rgba(0, 82, 147, 0.05));">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Workday_logo.svg" alt="Workday" class="integration-logo-img" style="filter: brightness(0) invert(1);" onerror="this.style.display='none'; this.parentElement.innerHTML='🏢';">
+                </div>
+                <h3 class="integration-name">Workday</h3>
+                <div class="integration-type">HCM Integration</div>
+                <p class="integration-desc">Bi-directional sync for workers, organizations, cost centers, and security groups. Circuit breaker pattern for resilience.</p>
+            </div>
+            <div class="integration-card reveal stagger-2">
+                <div class="integration-logo" style="background: linear-gradient(135deg, rgba(37, 211, 102, 0.2), rgba(37, 211, 102, 0.05));">
+                    <svg viewBox="0 0 48 48" class="integration-logo-img" style="width: 50px; height: 50px;">
+                        <path fill="#25D366" d="M24 4C12.95 4 4 12.95 4 24c0 3.54.93 6.86 2.55 9.74L4 44l10.55-2.77A19.87 19.87 0 0024 44c11.05 0 20-8.95 20-20S35.05 4 24 4z"/>
+                        <path fill="white" d="M34.6 28.8c-.55-.28-3.25-1.6-3.75-1.78-.5-.18-.87-.28-1.23.28-.37.55-1.42 1.78-1.74 2.15-.32.37-.64.42-1.19.14-.55-.28-2.32-.86-4.42-2.73-1.63-1.46-2.74-3.26-3.06-3.81-.32-.55-.03-.85.24-1.12.25-.25.55-.64.82-.96.28-.32.37-.55.55-.92.18-.37.09-.69-.05-.96-.14-.28-1.23-2.97-1.69-4.07-.44-1.07-.9-1.07-1.23-1.07-.32 0-.69-.05-1.05-.05s-.96.14-1.46.69c-.5.55-1.92 1.87-1.92 4.57s1.96 5.3 2.24 5.67c.28.37 3.86 5.9 9.35 8.27 1.31.56 2.33.9 3.12 1.15 1.31.42 2.5.36 3.44.22 1.05-.16 3.25-1.33 3.71-2.61.46-1.28.46-2.38.32-2.61-.14-.23-.5-.37-1.05-.64z"/>
+                    </svg>
+                </div>
+                <h3 class="integration-name">WhatsApp Business</h3>
+                <div class="integration-type">Communication</div>
+                <p class="integration-desc">Automated candidate outreach, interview scheduling, onboarding tasks, leave approvals, and process notifications.</p>
+            </div>
+            <div class="integration-card reveal stagger-3">
+                <div class="integration-logo" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05));">
+                    <svg viewBox="0 0 48 48" class="integration-logo-img" style="width: 50px; height: 50px;"><path fill="#818cf8" d="M24 4L4 14v20l20 10 20-10V14L24 4zm0 4.5l14 7-14 7-14-7 14-7zM8 18.5l14 7v13l-14-7v-13zm32 0v13l-14 7v-13l14-7z"/></svg>
+                </div>
+                <h3 class="integration-name">Temporal</h3>
+                <div class="integration-type">Workflow Engine</div>
+                <p class="integration-desc">Durable workflow orchestration for business processes, approvals, and long-running operations with automatic retry.</p>
+            </div>
+            <div class="integration-card reveal stagger-4">
+                <div class="integration-logo" style="background: linear-gradient(135deg, rgba(255, 203, 5, 0.2), rgba(255, 203, 5, 0.05));">
+                    <!-- DocuSign logo - yellow/gold envelope style -->
+                    <svg viewBox="0 0 60 60" class="integration-logo-img" style="width: 50px; height: 50px;">
+                        <rect x="8" y="15" width="44" height="30" rx="3" fill="#FFC829"/>
+                        <path d="M8 18l22 14 22-14" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+                        <path d="M30 32l-22 13h44L30 32z" fill="#E5B000"/>
+                    </svg>
+                </div>
+                <h3 class="integration-name">DocuSign</h3>
+                <div class="integration-type">E-Signature</div>
+                <p class="integration-desc">Electronic signature integration for offer letters, contracts, policy acknowledgments, and HR documents.</p>
+            </div>
+            <div class="integration-card reveal stagger-1">
+                <div class="integration-logo" style="background: linear-gradient(135deg, rgba(250, 15, 0, 0.2), rgba(250, 15, 0, 0.05));">
+                    <img src="https://cdn.worldvectorlogo.com/logos/adobe-2.svg" alt="Adobe Sign" class="integration-logo-img" onerror="this.style.display='none'; this.parentElement.innerHTML='📝';">
+                </div>
+                <h3 class="integration-name">Adobe Sign</h3>
+                <div class="integration-type">E-Signature</div>
+                <p class="integration-desc">Alternative e-signature solution with Adobe ecosystem integration for document workflows and compliance.</p>
+            </div>
+        </div>
+
+        <!-- Integration Marketplace -->
+        <div class="reveal">
+            <h3 style="text-align: center; font-size: 1.8rem; margin-bottom: 30px;">Integration Marketplace</h3>
+            <div class="marketplace-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="hcm">HCM</button>
+                <button class="filter-btn" data-filter="payroll">Payroll</button>
+                <button class="filter-btn" data-filter="benefits">Benefits</button>
+                <button class="filter-btn" data-filter="productivity">Productivity</button>
+                <button class="filter-btn" data-filter="communication">Communication</button>
+            </div>
+            <div class="marketplace-grid" id="marketplace-grid">
+                <div class="marketplace-item" data-category="hcm">
+                    <div class="marketplace-icon" style="background: rgba(0, 82, 147, 0.15);">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Workday_logo.svg" alt="Workday" class="marketplace-logo" style="filter: brightness(0) invert(1);" onerror="this.outerHTML='🏢';">
+                    </div>
+                    <div class="marketplace-name">Workday</div>
+                    <div class="marketplace-category">HCM</div>
+                </div>
+                <div class="marketplace-item" data-category="hcm">
+                    <div class="marketplace-icon" style="background: rgba(0, 118, 206, 0.15);">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg" alt="SAP" class="marketplace-logo" onerror="this.outerHTML='🔷';">
+                    </div>
+                    <div class="marketplace-name">SAP SuccessFactors</div>
+                    <div class="marketplace-category">HCM</div>
+                </div>
+                <div class="marketplace-item" data-category="hcm">
+                    <div class="marketplace-icon" style="background: rgba(255, 0, 0, 0.15);">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg" alt="Oracle" class="marketplace-logo" onerror="this.outerHTML='🔴';">
+                    </div>
+                    <div class="marketplace-name">Oracle HCM</div>
+                    <div class="marketplace-category">HCM</div>
+                </div>
+                <div class="marketplace-item" data-category="payroll">
+                    <div class="marketplace-icon" style="background: rgba(237, 28, 36, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><text x="4" y="32" font-size="20" font-weight="bold" fill="#ed1c24">ADP</text></svg>
+                    </div>
+                    <div class="marketplace-name">ADP</div>
+                    <div class="marketplace-category">Payroll</div>
+                </div>
+                <div class="marketplace-item" data-category="payroll">
+                    <div class="marketplace-icon" style="background: rgba(0, 75, 141, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><circle cx="24" cy="24" r="18" fill="#004b8d"/><text x="13" y="28" font-size="10" fill="white" font-weight="bold">PCX</text></svg>
+                    </div>
+                    <div class="marketplace-name">Paychex</div>
+                    <div class="marketplace-category">Payroll</div>
+                </div>
+                <div class="marketplace-item" data-category="payroll">
+                    <div class="marketplace-icon" style="background: rgba(245, 130, 32, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><circle cx="24" cy="24" r="18" fill="#f58220"/><path d="M18 20h12v8H18z" fill="white"/></svg>
+                    </div>
+                    <div class="marketplace-name">Gusto</div>
+                    <div class="marketplace-category">Payroll</div>
+                </div>
+                <div class="marketplace-item" data-category="benefits">
+                    <div class="marketplace-icon" style="background: rgba(0, 133, 202, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><rect x="8" y="14" width="32" height="20" rx="4" fill="#0085ca"/><path d="M16 24h16" stroke="white" stroke-width="3"/></svg>
+                    </div>
+                    <div class="marketplace-name">Benefitfocus</div>
+                    <div class="marketplace-category">Benefits</div>
+                </div>
+                <div class="marketplace-item" data-category="benefits">
+                    <div class="marketplace-icon" style="background: rgba(16, 185, 129, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><circle cx="24" cy="24" r="18" fill="#10b981"/><path d="M16 24l6 6 10-12" stroke="white" stroke-width="3" fill="none"/></svg>
+                    </div>
+                    <div class="marketplace-name">Ease</div>
+                    <div class="marketplace-category">Benefits</div>
+                </div>
+                <div class="marketplace-item" data-category="productivity">
+                    <div class="marketplace-icon" style="background: rgba(0, 120, 212, 0.15);">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg" alt="Microsoft 365" class="marketplace-logo" onerror="this.outerHTML='📊';">
+                    </div>
+                    <div class="marketplace-name">Microsoft 365</div>
+                    <div class="marketplace-category">Productivity</div>
+                </div>
+                <div class="marketplace-item" data-category="productivity">
+                    <div class="marketplace-icon" style="background: rgba(247, 190, 45, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo">
+                            <path fill="#F2C811" d="M42 6H22v36h20c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                            <path fill="#F2C811" d="M6 6h16v36H6c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2z" opacity="0.6"/>
+                            <rect x="10" y="14" width="8" height="20" fill="#1A1A1A" opacity="0.8"/>
+                            <rect x="22" y="18" width="6" height="16" fill="#1A1A1A" opacity="0.8"/>
+                            <rect x="32" y="10" width="6" height="24" fill="#1A1A1A" opacity="0.8"/>
+                        </svg>
+                    </div>
+                    <div class="marketplace-name">Power BI</div>
+                    <div class="marketplace-category">Productivity</div>
+                </div>
+                <div class="marketplace-item" data-category="productivity">
+                    <div class="marketplace-icon" style="background: rgba(66, 133, 244, 0.15);">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google Workspace" class="marketplace-logo" onerror="this.outerHTML='☁️';">
+                    </div>
+                    <div class="marketplace-name">Google Workspace</div>
+                    <div class="marketplace-category">Productivity</div>
+                </div>
+                <div class="marketplace-item" data-category="communication">
+                    <div class="marketplace-icon" style="background: rgba(37, 211, 102, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo">
+                            <path fill="#25D366" d="M24 4C12.95 4 4 12.95 4 24c0 3.54.93 6.86 2.55 9.74L4 44l10.55-2.77A19.87 19.87 0 0024 44c11.05 0 20-8.95 20-20S35.05 4 24 4z"/>
+                            <path fill="white" d="M34.6 28.8c-.55-.28-3.25-1.6-3.75-1.78-.5-.18-.87-.28-1.23.28-.37.55-1.42 1.78-1.74 2.15-.32.37-.64.42-1.19.14-.55-.28-2.32-.86-4.42-2.73-1.63-1.46-2.74-3.26-3.06-3.81-.32-.55-.03-.85.24-1.12.25-.25.55-.64.82-.96.28-.32.37-.55.55-.92.18-.37.09-.69-.05-.96-.14-.28-1.23-2.97-1.69-4.07-.44-1.07-.9-1.07-1.23-1.07-.32 0-.69-.05-1.05-.05s-.96.14-1.46.69c-.5.55-1.92 1.87-1.92 4.57s1.96 5.3 2.24 5.67c.28.37 3.86 5.9 9.35 8.27 1.31.56 2.33.9 3.12 1.15 1.31.42 2.5.36 3.44.22 1.05-.16 3.25-1.33 3.71-2.61.46-1.28.46-2.38.32-2.61-.14-.23-.5-.37-1.05-.64z"/>
+                        </svg>
+                    </div>
+                    <div class="marketplace-name">WhatsApp Business</div>
+                    <div class="marketplace-category">Communication</div>
+                </div>
+                <div class="marketplace-item" data-category="communication">
+                    <div class="marketplace-icon" style="background: rgba(74, 21, 75, 0.15);">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/slack/slack-original.svg" alt="Slack" class="marketplace-logo" onerror="this.outerHTML='💬';">
+                    </div>
+                    <div class="marketplace-name">Slack</div>
+                    <div class="marketplace-category">Communication</div>
+                </div>
+                <div class="marketplace-item" data-category="communication">
+                    <div class="marketplace-icon" style="background: rgba(80, 80, 160, 0.15);">
+                        <svg viewBox="0 0 48 48" class="marketplace-logo"><path fill="#5059c9" d="M32 16h8v16h-8z"/><path fill="#7b83eb" d="M8 12h20v24H8z"/><circle cx="40" cy="12" r="4" fill="#5059c9"/><circle cx="18" cy="8" r="6" fill="#7b83eb"/></svg>
+                    </div>
+                    <div class="marketplace-name">Microsoft Teams</div>
+                    <div class="marketplace-category">Communication</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section id="technology">
+        <div class="section-header reveal">
+            <div class="section-badge">⚡ Technology</div>
+            <h2 class="section-title">Modern Architecture</h2>
+            <p class="section-intro">
+                Built on a foundation of <span class="section-intro-highlight">18 independent microservices</span> with a unified API Gateway. 
+                Each service owns its data, scales independently, and communicates through well-defined contracts. 
+                Our <span class="section-intro-highlight">schema-per-service</span> PostgreSQL architecture ensures data isolation while enabling cross-service queries when needed.
+            </p>
+        </div>
+
+        <!-- Architecture Diagram -->
+        <div id="architecture" class="architecture-diagram reveal">
+            <h3 style="text-align: center; margin-bottom: 30px; font-size: 1.5rem;">System Architecture</h3>
+            <div class="arch-layers">
+                <div class="arch-layer">
+                    <div class="arch-layer-num" style="background: rgba(34, 211, 238, 0.2); color: var(--accent);">1</div>
+                    <div class="arch-layer-content">
+                        <div class="arch-layer-title">Frontend (React SPA)</div>
+                        <div class="arch-layer-desc">React 19 + TypeScript + Vite 6 • Port 8080 • Communicates only with API Gateway</div>
+                    </div>
+                </div>
+                <div class="arch-connector">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-num" style="background: rgba(99, 102, 241, 0.2); color: var(--primary-light);">2</div>
+                    <div class="arch-layer-content">
+                        <div class="arch-layer-title">API Gateway (Fastify)</div>
+                        <div class="arch-layer-desc">Port 3000 • JWT Auth • Rate Limiting • Circuit Breaker • Request Routing</div>
+                    </div>
+                </div>
+                <div class="arch-connector">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-num" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-green);">3</div>
+                    <div class="arch-layer-content">
+                        <div class="arch-layer-title">Microservices (18 Services)</div>
+                        <div class="arch-layer-desc">Ports 3001-3019 • Independent deployment • Event Bus communication • Schema-per-service</div>
+                    </div>
+                </div>
+                <div class="arch-connector">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-num" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-orange);">4</div>
+                    <div class="arch-layer-content">
+                        <div class="arch-layer-title">PostgreSQL (Supabase)</div>
+                        <div class="arch-layer-desc">Schema-per-service • Row-Level Security • Real-time capabilities • Encrypted PII</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Section -->
+        <div id="security" class="reveal">
+            <h3 style="text-align: center; font-size: 1.8rem; margin: 60px 0 30px;">4-Layer Security Model</h3>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 700px; margin: 0 auto 40px;">
+                Defense-in-depth security with authorization at every layer. Each layer adds protection, 
+                ensuring that even if one layer is bypassed, others maintain security.
+            </p>
+            <div class="security-visual">
+                <div class="security-layers">
+                    <div class="security-layer layer-1 reveal stagger-1">
+                        <div class="security-layer-badge" style="background: rgba(34, 211, 238, 0.2); color: var(--accent);">L1</div>
+                        <div class="security-layer-content">
+                            <div class="security-layer-title">Frontend (UI Visibility)</div>
+                            <div class="security-layer-desc">usePermissions() hook for cached permission checks. Show/hide UI elements based on role + module status. UX optimization only.</div>
+                            <div class="security-layer-tags">
+                                <span class="security-tag">React Hooks</span>
+                                <span class="security-tag">UI Filtering</span>
+                                <span class="security-tag">Fail-Open</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="security-layer layer-2 reveal stagger-2">
+                        <div class="security-layer-badge" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-green);">L2</div>
+                        <div class="security-layer-content">
+                            <div class="security-layer-title">API Gateway (Authentication)</div>
+                            <div class="security-layer-desc">JWT validation and token refresh. Basic role verification. Rate limiting and request validation. Returns 401/403.</div>
+                            <div class="security-layer-tags">
+                                <span class="security-tag">JWT</span>
+                                <span class="security-tag">Rate Limiting</span>
+                                <span class="security-tag">CORS</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="security-layer layer-3 reveal stagger-3">
+                        <div class="security-layer-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-orange);">L3</div>
+                        <div class="security-layer-content">
+                            <div class="security-layer-title">Microservice (Business Logic)</div>
+                            <div class="security-layer-desc">Detailed permission checks with organizational scope. Field-level access control. Rich error messages. Business context awareness.</div>
+                            <div class="security-layer-tags">
+                                <span class="security-tag">Org Scope</span>
+                                <span class="security-tag">Field-Level</span>
+                                <span class="security-tag">Business Rules</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="security-layer layer-4 reveal stagger-4">
+                        <div class="security-layer-badge" style="background: rgba(236, 72, 153, 0.2); color: var(--accent-pink);">L4</div>
+                        <div class="security-layer-content">
+                            <div class="security-layer-title">PostgreSQL RLS (Final Safety Net)</div>
+                            <div class="security-layer-desc">Tenant isolation mandatory on all tables. Basic role verification as fail-safe. Simple, fast policies. Query returns no rows on failure.</div>
+                            <div class="security-layer-tags">
+                                <span class="security-tag">Tenant Isolation</span>
+                                <span class="security-tag">RLS Policies</span>
+                                <span class="security-tag">Fail-Safe</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Stack -->
+        <div id="tech-stack" class="reveal">
+            <h3 style="text-align: center; font-size: 1.8rem; margin: 60px 0 30px;">Technology Stack</h3>
+            <div class="cards-grid">
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(34, 211, 238, 0.15); padding: 8px;">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" alt="React" class="tech-logo color">
+                    </div>
+                    <h4 class="card-title">Frontend</h4>
+                    <p class="card-desc">React 19 with TypeScript 5.7, Vite 6 build system, shadcn/ui components, Tailwind CSS 4, TanStack Query v5.</p>
+                    <div class="card-features">
+                        <span class="card-feature">React 19</span>
+                        <span class="card-feature">Vite 6</span>
+                        <span class="card-feature">TypeScript</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); padding: 8px;">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js" class="tech-logo color">
+                    </div>
+                    <h4 class="card-title">Backend</h4>
+                    <p class="card-desc">Fastify 4.28 web framework, Node.js 18+, Pino logging, opossum circuit breaker, Bottleneck rate limiting.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Fastify</span>
+                        <span class="card-feature">Node.js</span>
+                        <span class="card-feature">Pino</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-3">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); padding: 8px;">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" alt="PostgreSQL" class="tech-logo color">
+                    </div>
+                    <h4 class="card-title">Database</h4>
+                    <p class="card-desc">Supabase (PostgreSQL) with schema-per-service architecture, Row-Level Security, real-time subscriptions.</p>
+                    <div class="card-features">
+                        <span class="card-feature">PostgreSQL</span>
+                        <span class="card-feature">Supabase</span>
+                        <span class="card-feature">RLS</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-4">
+                    <div class="card-icon" style="background: rgba(99, 102, 241, 0.15); padding: 8px;">
+                        <svg viewBox="0 0 48 48" class="tech-logo" style="filter: none;"><path fill="#6366f1" d="M24 4L4 14v20l20 10 20-10V14L24 4zm0 4.5l14 7-14 7-14-7 14-7zM8 18.5l14 7v13l-14-7v-13zm32 0v13l-14 7v-13l14-7z"/></svg>
+                    </div>
+                    <h4 class="card-title">Workflows</h4>
+                    <p class="card-desc">Temporal for durable workflow orchestration, TypeScript SDK, automatic state persistence, saga pattern support.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Temporal</span>
+                        <span class="card-feature">Sagas</span>
+                        <span class="card-feature">Durable</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-1">
+                    <div class="card-icon" style="background: rgba(236, 72, 153, 0.15); padding: 8px;">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" alt="Docker" class="tech-logo color">
+                    </div>
+                    <h4 class="card-title">Infrastructure</h4>
+                    <p class="card-desc">Docker Compose orchestration, LocalStack for AWS emulation, hot-reload development, health checks.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Docker</span>
+                        <span class="card-feature">LocalStack</span>
+                        <span class="card-feature">SQS/SNS</span>
+                    </div>
+                </div>
+                <div class="card reveal stagger-2">
+                    <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); padding: 8px;">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitest/vitest-original.svg" alt="Vitest" class="tech-logo color">
+                    </div>
+                    <h4 class="card-title">Testing</h4>
+                    <p class="card-desc">Vitest 2.1 for unit testing, Testing Library for React, jest-axe for accessibility, fast-check for property testing.</p>
+                    <div class="card-features">
+                        <span class="card-feature">Vitest</span>
+                        <span class="card-feature">Testing Library</span>
+                        <span class="card-feature">A11y</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Microservices Grid -->
+        <div class="reveal">
+            <h3 style="text-align: center; font-size: 1.8rem; margin: 60px 0 30px;">18 Microservices</h3>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">🚪</div>
+                    <div class="service-name">Gateway</div>
+                    <div class="service-port">Port 3000</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🔐</div>
+                    <div class="service-name">Auth</div>
+                    <div class="service-port">Port 3001</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">👥</div>
+                    <div class="service-name">HCM</div>
+                    <div class="service-port">Port 3002</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🛡️</div>
+                    <div class="service-name">Security</div>
+                    <div class="service-port">Port 3003</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🎯</div>
+                    <div class="service-name">Recruitment</div>
+                    <div class="service-port">Port 3004</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">💰</div>
+                    <div class="service-name">Compensation</div>
+                    <div class="service-port">Port 3005</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">🎁</div>
+                    <div class="service-name">Benefits</div>
+                    <div class="service-port">Port 3007</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🏖️</div>
+                    <div class="service-name">TimeOff</div>
+                    <div class="service-port">Port 3008</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">⏰</div>
+                    <div class="service-name">TimeTracking</div>
+                    <div class="service-port">Port 3009</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">💵</div>
+                    <div class="service-name">Payroll</div>
+                    <div class="service-port">Port 3010</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">⭐</div>
+                    <div class="service-name">Talent</div>
+                    <div class="service-port">Port 3011</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">📚</div>
+                    <div class="service-name">Learning</div>
+                    <div class="service-port">Port 3012</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">📊</div>
+                    <div class="service-name">Reports</div>
+                    <div class="service-port">Port 3013</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🎫</div>
+                    <div class="service-name">Ticketing</div>
+                    <div class="service-port">Port 3014</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🔄</div>
+                    <div class="service-name">BPM</div>
+                    <div class="service-port">Port 3015</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🔔</div>
+                    <div class="service-name">Notification</div>
+                    <div class="service-port">Port 3016</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">📝</div>
+                    <div class="service-name">Audit</div>
+                    <div class="service-port">Port 3017</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">⚙️</div>
+                    <div class="service-name">Settings</div>
+                    <div class="service-port">Port 3018</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🔗</div>
+                    <div class="service-name">Integration</div>
+                    <div class="service-port">Port 3019</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operations -->
+        <div id="operations" class="reveal">
+            <h3 style="text-align: center; font-size: 1.8rem; margin: 60px 0 30px;">Operations & Observability</h3>
+            <div class="ops-grid">
+                <div class="ops-card reveal stagger-1">
+                    <div class="ops-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">📊</div>
+                    <h4 class="ops-title">Three Pillars</h4>
+                    <p class="ops-desc">Structured JSON logs with Pino, Prometheus metrics at /metrics, distributed tracing with X-Correlation-ID.</p>
+                </div>
+                <div class="ops-card reveal stagger-2">
+                    <div class="ops-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">💚</div>
+                    <h4 class="ops-title">Health Checks</h4>
+                    <p class="ops-desc">Standard /health endpoints on all services. Liveness, readiness, and full health checks with dependency status.</p>
+                </div>
+                <div class="ops-card reveal stagger-3">
+                    <div class="ops-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">⚡</div>
+                    <h4 class="ops-title">Circuit Breakers</h4>
+                    <p class="ops-desc">Opossum circuit breakers for external calls. Automatic fallback, half-open testing, and recovery detection.</p>
+                </div>
+                <div class="ops-card reveal stagger-4">
+                    <div class="ops-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">🔄</div>
+                    <h4 class="ops-title">Retry Patterns</h4>
+                    <p class="ops-desc">Exponential backoff with configurable limits. Idempotency keys for safe retries. Smart error classification.</p>
+                </div>
+                <div class="ops-card reveal stagger-1">
+                    <div class="ops-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🚨</div>
+                    <h4 class="ops-title">Alerting</h4>
+                    <p class="ops-desc">SEV1-SEV4 severity levels. Critical alerts for service down, high error rates. Warning alerts for degradation.</p>
+                </div>
+                <div class="ops-card reveal stagger-2">
+                    <div class="ops-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">💾</div>
+                    <h4 class="ops-title">Backup & Recovery</h4>
+                    <p class="ops-desc">Point-in-time recovery (7 days), daily snapshots (30 days), weekly archives (90 days). RTO: 4h, RPO: 1h.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Structure Section -->
+    <section id="structure">
+        <div class="section-header reveal">
+            <div class="section-badge">📁 Structure</div>
+            <h2 class="section-title">Project Organization</h2>
+            <p class="section-intro">
+                A <span class="section-intro-highlight">multi-root workspace</span> with clear separation between frontend and backend. 
+                The frontend is a React SPA with 80+ pages and 100+ custom hooks. The backend consists of 18 microservices 
+                with shared libraries for types, utilities, and event bus. Each service follows a <span class="section-intro-highlight">consistent structure</span> 
+                with controllers, services, repositories, and routes.
+            </p>
+        </div>
+
+        <!-- Clean Folder Structure -->
+        <div id="frontend-structure" class="folder-structure">
+            <div class="folder-panel reveal reveal-left">
+                <div class="folder-panel-header">
+                    <div class="folder-panel-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">🎨</div>
+                    <div>
+                        <div class="folder-panel-title">OneG Frontend</div>
+                        <div class="folder-panel-subtitle">React SPA • Port 8080</div>
+                    </div>
+                </div>
+                <div class="folder-tree">
+                    <div class="folder-item">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">src/</span>
+                        <span class="folder-desc">Source code</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">components/</span>
+                        <span class="folder-desc">30+ feature dirs</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">hooks/</span>
+                        <span class="folder-desc">100+ custom hooks</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">pages/</span>
+                        <span class="folder-desc">80+ route pages</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">api/</span>
+                        <span class="folder-desc">API client calls</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">lib/</span>
+                        <span class="folder-desc">Utilities & services</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">types/</span>
+                        <span class="folder-desc">TypeScript types</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon config">⚙️</div>
+                        <span class="folder-name">vite.config.ts</span>
+                        <span class="folder-desc">Build config</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon config">⚙️</div>
+                        <span class="folder-name">tsconfig.json</span>
+                        <span class="folder-desc">TypeScript</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon file">📄</div>
+                        <span class="folder-name">package.json</span>
+                        <span class="folder-desc">Dependencies</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="backend-structure" class="folder-panel reveal reveal-right">
+                <div class="folder-panel-header">
+                    <div class="folder-panel-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">⚙️</div>
+                    <div>
+                        <div class="folder-panel-title">OneG Platform</div>
+                        <div class="folder-panel-subtitle">Microservices • Ports 3000-3019</div>
+                    </div>
+                </div>
+                <div class="folder-tree">
+                    <div class="folder-item">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">gateway/</span>
+                        <span class="folder-desc">API Gateway</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">services/</span>
+                        <span class="folder-desc">18 microservices</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon service">🔐</div>
+                        <span class="folder-name">auth-service/</span>
+                        <span class="folder-desc">Authentication</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon service">👥</div>
+                        <span class="folder-name">hcm-service/</span>
+                        <span class="folder-desc">HCM core</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon service">🛡️</div>
+                        <span class="folder-name">security-service/</span>
+                        <span class="folder-desc">Access control</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon service">...</div>
+                        <span class="folder-name">+ 15 more</span>
+                        <span class="folder-desc">services</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">shared/</span>
+                        <span class="folder-desc">Shared libraries</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon file">📦</div>
+                        <span class="folder-name">types/</span>
+                        <span class="folder-desc">@oneg/types</span>
+                    </div>
+                    <div class="folder-item indent-1">
+                        <div class="folder-icon file">📦</div>
+                        <span class="folder-name">utils/</span>
+                        <span class="folder-desc">@oneg/utils</span>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon folder">📁</div>
+                        <span class="folder-name">infrastructure/</span>
+                        <span class="folder-desc">Docker configs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Structure -->
+        <div class="reveal" style="margin-top: 40px;">
+            <h3 style="text-align: center; font-size: 1.5rem; margin-bottom: 30px;">Microservice Structure Pattern</h3>
+            <div class="folder-structure" style="max-width: 500px; margin: 0 auto;">
+                <div class="folder-panel">
+                    <div class="folder-panel-header">
+                        <div class="folder-panel-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">📦</div>
+                        <div>
+                            <div class="folder-panel-title">service-name/</div>
+                            <div class="folder-panel-subtitle">Standard service layout</div>
+                        </div>
+                    </div>
+                    <div class="folder-tree">
+                        <div class="folder-item">
+                            <div class="folder-icon folder">📁</div>
+                            <span class="folder-name">src/</span>
+                        </div>
+                        <div class="folder-item indent-1">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">controllers/</span>
+                            <span class="folder-desc">Request handlers</span>
+                        </div>
+                        <div class="folder-item indent-1">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">services/</span>
+                            <span class="folder-desc">Business logic</span>
+                        </div>
+                        <div class="folder-item indent-1">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">repositories/</span>
+                            <span class="folder-desc">Data access</span>
+                        </div>
+                        <div class="folder-item indent-1">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">routes/</span>
+                            <span class="folder-desc">API routes</span>
+                        </div>
+                        <div class="folder-item indent-1">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">app.ts</span>
+                            <span class="folder-desc">Entry point</span>
+                        </div>
+                        <div class="folder-item">
+                            <div class="folder-icon folder">📁</div>
+                            <span class="folder-name">migrations/</span>
+                            <span class="folder-desc">DB migrations</span>
+                        </div>
+                        <div class="folder-item">
+                            <div class="folder-icon config">⚙️</div>
+                            <span class="folder-name">Dockerfile</span>
+                        </div>
+                        <div class="folder-item">
+                            <div class="folder-icon file">📄</div>
+                            <span class="folder-name">package.json</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Schema -->
+        <div id="database-schema" class="reveal" style="margin-top: 60px;">
+            <h3 style="text-align: center; font-size: 1.8rem; margin-bottom: 30px;">Schema-per-Service Architecture</h3>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 700px; margin: 0 auto 40px;">
+                Each microservice owns its own PostgreSQL schema with exclusive write access. 
+                All services can read from the shared <code style="background: var(--bg-glass); padding: 2px 8px; border-radius: 4px;">core</code> schema.
+            </p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🔐</div>
+                    <div class="service-name">auth</div>
+                    <div class="service-port">sessions, tokens, MFA</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">👥</div>
+                    <div class="service-name">hcm</div>
+                    <div class="service-port">profiles, positions, orgs</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🛡️</div>
+                    <div class="service-name">security</div>
+                    <div class="service-port">roles, permissions</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🎯</div>
+                    <div class="service-name">recruitment</div>
+                    <div class="service-port">jobs, candidates</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">💰</div>
+                    <div class="service-name">compensation</div>
+                    <div class="service-port">grades, salary bands</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);">🔄</div>
+                    <div class="service-name">bpm</div>
+                    <div class="service-port">workflows, tasks</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">🌐</div>
+                    <div class="service-name">core</div>
+                    <div class="service-port">countries, currencies</div>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: rgba(34, 211, 238, 0.15); color: var(--accent);">...</div>
+                    <div class="service-name">+ 11 more</div>
+                    <div class="service-port">schemas</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <svg width="44" height="44" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer blue circle -->
+                    <circle fill="#0262CE" opacity="1.000000" cx="85" cy="85" r="85"/>
+<path fill="#FCFDFE" opacity="1.000000" stroke="none" 
+	d="
+M113.881172,43.019569 
+	C90.264648,30.178478 64.684189,34.045605 48.058449,52.726799 
+	C34.858883,67.558228 32.072502,91.197632 41.385361,109.340706 
+	C50.738903,127.563042 70.842735,138.549789 90.950676,136.420853 
+	C110.832100,134.315887 125.166649,124.462334 133.300430,106.012535 
+	C134.083359,104.236649 134.581955,102.335403 135.393738,99.962784 
+	C118.782120,99.962784 102.833885,99.962784 86.603561,99.962784 
+	C86.603561,93.339470 86.603561,87.077477 86.603561,80.435883 
+	C111.160164,80.435883 135.701385,80.435883 160.242233,80.435883 
+	C163.302979,114.552216 140.748764,149.091629 103.432854,157.950897 
+	C66.442032,166.733002 28.771688,145.612122 16.506569,109.184753 
+	C4.347583,73.072617 22.413317,33.109261 57.723087,18.009363 
+	C92.474304,3.148329 133.437683,17.290405 151.412231,50.778969 
+	C144.918335,54.290916 138.415344,57.807789 132.816299,60.835804 
+	C126.346870,54.716988 120.267281,48.966877 113.881172,43.019569 
+z"/>
+                </svg>
+                <span>OneG Platform</span>
+            </div>
+            <p class="footer-desc">
+                Enterprise Human Capital Management platform by Goddard Technologies. 
+                Modern microservices architecture with AI-powered intelligence.
+            </p>
+            <div class="footer-links">
+                <a href="#product" class="footer-link">Product</a>
+                <a href="#technology" class="footer-link">Technology</a>
+                <a href="#structure" class="footer-link">Structure</a>
+                <a href="#ai-features" class="footer-link">AI Features</a>
+                <a href="#integrations" class="footer-link">Integrations</a>
+            </div>
+            <p class="footer-copy">© 2026 Goddard Technologies. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Scroll reveal animation
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+            
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        // Navbar scroll effect
+        function handleNavScroll() {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        }
+        
+        // Marketplace filter functionality
+        function initMarketplaceFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const marketplaceItems = document.querySelectorAll('.marketplace-item');
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const filter = this.getAttribute('data-filter');
+                    
+                    marketplaceItems.forEach(item => {
+                        const category = item.getAttribute('data-category');
+                        
+                        if (filter === 'all' || category === filter) {
+                            item.classList.remove('hidden');
+                            item.style.display = '';
+                        } else {
+                            item.classList.add('hidden');
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Smooth scroll for anchor links
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        const navHeight = document.getElementById('navbar').offsetHeight;
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight - 20;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+            reveal();
+            initMarketplaceFilters();
+            initSmoothScroll();
+        });
+        
+        // Event listeners
+        window.addEventListener('scroll', function() {
+            reveal();
+            handleNavScroll();
+        });
+        
+        // Initial call
+        reveal();
+        handleNavScroll();
+        
+        // ========================================
+        // Interactive Particle Gravity Animation
+        // ========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+        
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Track mouse position
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+        
+        // Particle class
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                
+                // Color variations (blue/cyan theme)
+                const colors = [
+                    'rgba(99, 102, 241, 0.6)',   // Primary purple
+                    'rgba(34, 211, 238, 0.5)',   // Cyan
+                    'rgba(129, 140, 248, 0.5)',  // Light purple
+                    'rgba(16, 185, 129, 0.4)',   // Green
+                    'rgba(255, 255, 255, 0.3)'   // White
+                ];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            update() {
+                // Mouse interaction - gravity/repulsion effect
+                if (mouse.x !== null && mouse.y !== null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        // Calculate force direction
+                        let forceDirectionX = dx / distance;
+                        let forceDirectionY = dy / distance;
+                        
+                        // Calculate force (stronger when closer)
+                        let force = (mouse.radius - distance) / mouse.radius;
+                        let directionX = forceDirectionX * force * this.density * 0.6;
+                        let directionY = forceDirectionY * force * this.density * 0.6;
+                        
+                        // Push particles away from mouse (repulsion)
+                        this.x -= directionX;
+                        this.y -= directionY;
+                    }
+                }
+                
+                // Slowly return to original position (gravity back)
+                let dx = this.baseX - this.x;
+                let dy = this.baseY - this.y;
+                this.x += dx * 0.02;
+                this.y += dy * 0.02;
+                
+                // Add slight floating movement
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Boundary check for floating
+                if (Math.abs(this.x - this.baseX) > 50) this.vx *= -1;
+                if (Math.abs(this.y - this.baseY) > 50) this.vy *= -1;
+                
+                this.draw();
+            }
+        }
+        
+        // Initialize particles
+        function initParticles() {
+            particles = [];
+            const numberOfParticles = Math.min((canvas.width * canvas.height) / 12000, 150);
+            
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+        
+        // Connect particles with lines
+        function connectParticles() {
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a + 1; b < particles.length; b++) {
+                    let dx = particles[a].x - particles[b].x;
+                    let dy = particles[a].y - particles[b].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 120) {
+                        let opacity = 1 - (distance / 120);
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.15})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        // Animation loop
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let particle of particles) {
+                particle.update();
+            }
+            
+            connectParticles();
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+        
+        // Reinitialize on resize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+    </script>
+</body>
+</html>

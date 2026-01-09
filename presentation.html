@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneG HCM Platform - Technical Overview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #eee; }
+        .slide { min-height: 100vh; padding: 60px; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+        .slide-title { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .slide-content { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+        h1 { font-size: 3.5em; margin-bottom: 20px; background: linear-gradient(90deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 2.5em; margin-bottom: 30px; color: #667eea; border-bottom: 3px solid #764ba2; padding-bottom: 15px; }
+        h3 { font-size: 1.8em; margin: 25px 0 15px; color: #a78bfa; }
+        p { font-size: 1.3em; line-height: 1.8; margin-bottom: 15px; }
+        ul { font-size: 1.2em; line-height: 2; margin-left: 30px; }
+        li { margin-bottom: 10px; }
+        .highlight { color: #fbbf24; font-weight: bold; }
+        .diagram { background: #0f0f23; border-radius: 15px; padding: 30px; margin: 25px 0; font-family: 'Courier New', monospace; font-size: 0.9em; white-space: pre; overflow-x: auto; border: 2px solid #667eea; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin: 25px 0; }
+        .card { background: rgba(102, 126, 234, 0.1); border-radius: 15px; padding: 25px; border: 1px solid #667eea; }
+        .card h4 { color: #a78bfa; font-size: 1.4em; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 1em; }
+        th, td { padding: 15px; text-align: left; border: 1px solid #667eea; }
+        th { background: rgba(102, 126, 234, 0.3); color: #fff; }
+        tr:nth-child(even) { background: rgba(102, 126, 234, 0.1); }
+        .subtitle { font-size: 1.8em; color: #a78bfa; margin-top: 20px; }
+        .badge { display: inline-block; background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; margin: 5px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        @media print { .slide { page-break-after: always; } }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide slide-title" style="text-align: center; justify-content: center;">
+    <h1 style="font-size: 4.5em; -webkit-text-fill-color: white;">OneG HCM Platform</h1>
+    <p class="subtitle" style="color: white;">Enterprise Human Capital Management System</p>
+    <p style="margin-top: 40px; font-size: 1.5em; color: rgba(255,255,255,0.8);">Technical Architecture & Overview</p>
+    <div style="margin-top: 50px;">
+        <span class="badge">Microservices</span>
+        <span class="badge">React + TypeScript</span>
+        <span class="badge">PostgreSQL</span>
+        <span class="badge">Temporal Workflows</span>
+    </div>
+</div>
+
+<!-- Slide 2: Executive Summary -->
+<div class="slide slide-content">
+    <h2>Executive Summary</h2>
+    <p>OneG is a comprehensive enterprise Human Capital Management (HCM) platform built with modern microservices architecture.</p>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🖥️ Frontend</h4>
+            <p>React SPA with TypeScript</p>
+            <ul>
+                <li>Communicates exclusively through API Gateway</li>
+                <li>No direct database access</li>
+                <li>Modern UI with shadcn/ui</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>⚙️ Backend</h4>
+            <p>18 Microservices + API Gateway</p>
+            <ul>
+                <li>16 existing + 2 new services</li>
+                <li>Schema-per-service architecture</li>
+                <li>Event-driven communication</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🗄️ Database</h4>
+            <p>Supabase (PostgreSQL)</p>
+            <ul>
+                <li>Real-time capabilities</li>
+                <li>Row-level security</li>
+                <li>Multi-tenant isolation</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🔧 Infrastructure</h4>
+            <p>Docker + Temporal</p>
+            <ul>
+                <li>Docker Compose orchestration</li>
+                <li>LocalStack for AWS emulation</li>
+                <li>Temporal for workflows</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 3: High-Level Architecture -->
+<div class="slide slide-content">
+    <h2>High-Level Architecture</h2>
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              OneG PLATFORM ARCHITECTURE                              │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│   ┌──────────────────────┐                                                          │
+│   │   React SPA (8080)   │  ◄── Users access via browser                            │
+│   │   TypeScript + Vite  │                                                          │
+│   └──────────┬───────────┘                                                          │
+│              │ REST API calls                                                        │
+│              ▼                                                                       │
+│   ┌──────────────────────┐                                                          │
+│   │   API Gateway (3000) │  ◄── JWT Auth, Rate Limiting, Routing                    │
+│   │      Fastify         │                                                          │
+│   └──────────┬───────────┘                                                          │
+│              │                                                                       │
+│   ┌──────────┴──────────────────────────────────────────────────────────┐           │
+│   │                        MICROSERVICES (3001-3019)                     │           │
+│   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │           │
+│   │  │  Auth   │ │   HCM   │ │Security │ │   BPM   │ │ Payroll │  ...  │           │
+│   │  │ (3001)  │ │ (3002)  │ │ (3003)  │ │ (3015)  │ │ (3010)  │       │           │
+│   │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘       │           │
+│   └───────┼──────────┼──────────┼──────────┼──────────┼────────────────┘           │
+│           │          │          │          │          │                             │
+│           └──────────┴──────────┴──────────┴──────────┘                             │
+│                              │                                                       │
+│              ┌───────────────┼───────────────┐                                      │
+│              ▼               ▼               ▼                                      │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                             │
+│   │  PostgreSQL  │  │  Event Bus   │  │   Temporal   │                             │
+│   │  (Supabase)  │  │  (SQS/SNS)   │  │  Workflows   │                             │
+│   └──────────────┘  └──────────────┘  └──────────────┘                             │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+    </div>
+</div>
+
+<!-- Slide 4: Architecture Principles -->
+<div class="slide slide-content">
+    <h2>Architecture Principles</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🔀 Separation of Concerns</h4>
+            <p>Frontend handles UI/UX, backend handles business logic and data access</p>
+        </div>
+        <div class="card">
+            <h4>📡 API-First Design</h4>
+            <p>All frontend-backend communication through REST APIs via API Gateway</p>
+        </div>
+        <div class="card">
+            <h4>🔒 Security First</h4>
+            <p>No database credentials in frontend, all authentication through API Gateway</p>
+        </div>
+        <div class="card">
+            <h4>📈 Scalability</h4>
+            <p>Microservices can scale independently based on load</p>
+        </div>
+        <div class="card">
+            <h4>🗃️ Schema-per-Service</h4>
+            <p>Each microservice owns its own database schema with exclusive write access</p>
+        </div>
+        <div class="card">
+            <h4>🚀 Modular Launch</h4>
+            <p>Modules can be enabled/disabled dynamically for flexible deployments</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 5: Database Schema Architecture -->
+<div class="slide slide-content">
+    <h2>Database Schema Architecture</h2>
+    <p>Each microservice owns its own PostgreSQL schema following the <span class="highlight">schema-per-service</span> pattern:</p>
+    
+    <table>
+        <tr><th>Microservice</th><th>Schema</th><th>Description</th></tr>
+        <tr><td>auth-service</td><td><code>auth</code></td><td>Authentication, sessions, MFA, SSO</td></tr>
+        <tr><td>hcm-service</td><td><code>hcm</code></td><td>Employee profiles, organizations, positions</td></tr>
+        <tr><td>security-service</td><td><code>security</code></td><td>Roles, permissions, access control</td></tr>
+        <tr><td>recruitment-service</td><td><code>recruitment</code></td><td>Job requisitions, candidates, applications</td></tr>
+        <tr><td>compensation-service</td><td><code>compensation</code></td><td>Salary grades, pay elements, plans</td></tr>
+        <tr><td>bpm-service</td><td><code>bpm</code></td><td>Business processes, workflows, approvals</td></tr>
+        <tr><td>settings-service</td><td><code>settings</code></td><td>Module configurations, app settings</td></tr>
+        <tr><td>integration-service</td><td><code>integration</code></td><td>External integrations, Workday sync</td></tr>
+        <tr><td>(shared)</td><td><code>core</code></td><td>Countries, languages, timezones, currencies</td></tr>
+    </table>
+    
+    <h3>Schema Access Rules</h3>
+    <ul>
+        <li>Each microservice has <span class="highlight">exclusive write access</span> to its own schema</li>
+        <li>All microservices have <span class="highlight">read access</span> to the <code>core</code> schema</li>
+        <li>Cross-schema references use fully qualified table names (e.g., <code>hcm.profiles</code>)</li>
+    </ul>
+</div>
+
+<!-- Slide 6: Security Architecture - Defense in Depth -->
+<div class="slide slide-content">
+    <h2>Security Architecture - Defense in Depth</h2>
+    <p>The platform implements a <span class="highlight">layered security model</span> with authorization at multiple levels:</p>
+    
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Layer 1: FRONTEND (UI Visibility)                                           │
+│ • usePermissions() hook for cached permission checks                        │
+│ • Show/hide UI elements based on role + module status                       │
+│ • No security enforcement, only UX optimization                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Layer 2: API GATEWAY (Authentication + Basic Auth)                          │
+│ • JWT validation and token refresh                                          │
+│ • Basic role verification                                                   │
+│ • Rate limiting and request validation                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Layer 3: MICROSERVICE (Business Logic Authorization)                        │
+│ • Detailed permission checks with organizational scope                      │
+│ • Field-level access control                                                │
+│ • Rich error messages ("You need Manager role to...")                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Layer 4: POSTGRESQL RLS (Final Safety Net)                                  │
+│ • Tenant isolation (MANDATORY on all tables)                                │
+│ • Basic role verification as fail-safe                                      │
+│ • Simple, fast policies - not business logic                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+    </div>
+</div>
+
+<!-- Slide 7: Authorization Decision Flow -->
+<div class="slide slide-content">
+    <h2>Authorization Decision Flow</h2>
+    
+    <div class="diagram">
+User Request → Is Module Enabled? → Does User Have Role? → Is Org Scope Valid? → Field-Level Check → RLS Final Check
+                    │                      │                      │                      │                │
+                    ▼                      ▼                      ▼                      ▼                ▼
+              403 Module          403 Forbidden           403 Out of Scope      Mask/Filter Fields    Allow/Deny
+              Disabled
+    </div>
+    
+    <h3>Security Model Components</h3>
+    <div class="grid">
+        <div class="card">
+            <h4>Unified Roles System</h4>
+            <p>Single <code>unified_roles</code> table for both global and organizational roles</p>
+        </div>
+        <div class="card">
+            <h4>Position-Based Assignments</h4>
+            <p>Roles assigned to positions via <code>position_role_assignments</code>, not directly to users</p>
+        </div>
+        <div class="card">
+            <h4>Domain-Based Access Control</h4>
+            <p>Functional Areas → Domains → Datasources → Fields hierarchy</p>
+        </div>
+        <div class="card">
+            <h4>Menu/UI Security</h4>
+            <p>Visibility = Role Permissions ∩ Module Enablement</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: Core Modules Overview -->
+<div class="slide slide-content">
+    <h2>Core Modules Overview</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>👥 HCM (Human Capital Management)</h4>
+            <p>Employee profiles, organizational structure, positions, cost centers, locations, job profiles</p>
+        </div>
+        <div class="card">
+            <h4>🎯 Recruitment</h4>
+            <p>Job requisitions, ATS, candidate tracking, interviews, offers, onboarding</p>
+        </div>
+        <div class="card">
+            <h4>💰 Compensation</h4>
+            <p>Salary grades, pay elements, compensation plans, merit increases</p>
+        </div>
+        <div class="card">
+            <h4>🏖️ Time Off & Absence</h4>
+            <p>Leave requests, balances, policies, holiday calendars, accruals</p>
+        </div>
+        <div class="card">
+            <h4>⭐ Talent & Performance</h4>
+            <p>Performance reviews, goals (OKRs), 360 feedback, development plans</p>
+        </div>
+        <div class="card">
+            <h4>📊 Reports & Analytics</h4>
+            <p>Pre-built reports, custom builder, dashboards, exports</p>
+        </div>
+        <div class="card">
+            <h4>🏥 Benefits</h4>
+            <p>Enrollment, benefit plans, life events, carrier integrations</p>
+        </div>
+        <div class="card">
+            <h4>📚 Learning</h4>
+            <p>Course catalog, learning paths, certifications, compliance training</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Advanced Modules -->
+<div class="slide slide-content">
+    <h2>Advanced Modules</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>⏰ Time Tracking & Attendance</h4>
+            <ul>
+                <li>Clock in/out with geofencing</li>
+                <li>Digital timesheets & approvals</li>
+                <li>AI scheduling & anomaly detection</li>
+                <li>Conversational time entry</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>💵 Payroll</h4>
+            <ul>
+                <li>Gross-to-net calculations</li>
+                <li>Tax calculations & compliance</li>
+                <li>Direct deposit & pay cards</li>
+                <li>Multi-jurisdiction support</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>📁 Project & Cost Allocation</h4>
+            <ul>
+                <li>Employee-to-project assignment</li>
+                <li>AI-powered cost suggestions</li>
+                <li>Grant/funding source management</li>
+                <li>Burden/overhead calculations</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🎫 Ticketing System</h4>
+            <ul>
+                <li>Ticket creation & routing</li>
+                <li>SLA management</li>
+                <li>Knowledge base integration</li>
+                <li>Escalation workflows</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 10: BPM Architecture with Temporal -->
+<div class="slide slide-content">
+    <h2>BPM Architecture (Temporal Integration)</h2>
+    <p>The BPM service uses <span class="highlight">Temporal</span> as the workflow orchestration engine for durable, fault-tolerant workflow execution.</p>
+    
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           BPM SERVICE ARCHITECTURE                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────────┐ │
+│  │   Frontend   │────▶│  BPM Service │────▶│      Temporal Server         │ │
+│  │  (React UI)  │     │  (Fastify)   │     │  (Workflow Orchestration)    │ │
+│  └──────────────┘     └──────────────┘     └──────────────────────────────┘ │
+│         │                    │                          │                    │
+│         │                    │                          │                    │
+│         ▼                    ▼                          ▼                    │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────────┐ │
+│  │  My Tasks    │     │  PostgreSQL  │     │     Temporal Workers         │ │
+│  │  Dashboard   │     │  (bpm schema)│     │  (Activity Execution)        │ │
+│  └──────────────┘     └──────────────┘     └──────────────────────────────┘ │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+    </div>
+    
+    <div class="two-col">
+        <div>
+            <h3>Workflow Features</h3>
+            <ul>
+                <li>Durable TypeScript workflows</li>
+                <li>Automatic state persistence</li>
+                <li>Signals for external events</li>
+                <li>Real-time state queries</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Task Management</h3>
+            <ul>
+                <li>Role-based task assignment</li>
+                <li>Delegation & reassignment</li>
+                <li>SLA tracking & escalation</li>
+                <li>Saga pattern for rollback</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11: Workday Integration -->
+<div class="slide slide-content">
+    <h2>External Integration - Workday</h2>
+    <p>The Integration Service provides synchronization with external HCM systems using Temporal workflows.</p>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🔄 Sync Workflows</h4>
+            <ul>
+                <li><code>sync-workers</code> - Employee data</li>
+                <li><code>sync-organizations</code> - Org structure</li>
+                <li><code>sync-projects</code> - Work tags</li>
+                <li><code>sync-security-groups</code> - Role mappings</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🛡️ Resilience Patterns</h4>
+            <ul>
+                <li>Circuit breaker (opossum)</li>
+                <li>Rate limiting (bottleneck)</li>
+                <li>Exponential backoff retries</li>
+                <li>Conflict resolution strategies</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>📊 Tracking</h4>
+            <ul>
+                <li>Sync history & error logs</li>
+                <li>Security group mappings</li>
+                <li>Encrypted credentials</li>
+                <li>Health monitoring</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>⚙️ Configuration</h4>
+            <ul>
+                <li>Hourly/daily/manual schedules</li>
+                <li>Workday wins vs OneG wins</li>
+                <li>Read-only mode for synced data</li>
+                <li>Key rotation support</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 12: Frontend Technology Stack -->
+<div class="slide slide-content">
+    <h2>Frontend Technology Stack</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🏗️ Core Framework</h4>
+            <ul>
+                <li><strong>Vite 6</strong> - Build tool with HMR</li>
+                <li><strong>React 19</strong> - UI framework</li>
+                <li><strong>TypeScript 5.7</strong> - Type safety</li>
+                <li><strong>SWC</strong> - Fast compiler</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🎨 UI & Styling</h4>
+            <ul>
+                <li><strong>shadcn/ui</strong> - Component library</li>
+                <li><strong>Tailwind CSS 4</strong> - Utility-first CSS</li>
+                <li><strong>Radix UI</strong> - Accessible primitives</li>
+                <li><strong>Lucide React</strong> - Icons</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>📦 State & Data</h4>
+            <ul>
+                <li><strong>TanStack Query v5</strong> - Server state</li>
+                <li><strong>React Hook Form</strong> - Forms</li>
+                <li><strong>Zod</strong> - Schema validation</li>
+                <li><strong>Axios</strong> - HTTP client</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🧪 Testing</h4>
+            <ul>
+                <li><strong>Vitest</strong> - Unit testing</li>
+                <li><strong>Testing Library</strong> - Component tests</li>
+                <li><strong>jest-axe</strong> - Accessibility</li>
+                <li><strong>happy-dom</strong> - DOM implementation</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h3>Additional Libraries</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+        <span class="badge">React Router DOM 7</span>
+        <span class="badge">Recharts 2.15</span>
+        <span class="badge">date-fns 4</span>
+        <span class="badge">DOMPurify</span>
+        <span class="badge">Sonner (Toasts)</span>
+        <span class="badge">next-themes</span>
+    </div>
+</div>
+
+<!-- Slide 13: Backend Technology Stack -->
+<div class="slide slide-content">
+    <h2>Backend Technology Stack</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🚀 Core Framework</h4>
+            <ul>
+                <li><strong>Fastify 4.28</strong> - Web framework</li>
+                <li><strong>TypeScript 5.5</strong> - Type safety</li>
+                <li><strong>Node.js 18+</strong> - Runtime</li>
+                <li><strong>Pino</strong> - JSON logger</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🔐 API Gateway</h4>
+            <ul>
+                <li><strong>@fastify/http-proxy</strong> - Routing</li>
+                <li><strong>@fastify/jwt</strong> - Authentication</li>
+                <li><strong>@fastify/rate-limit</strong> - Rate limiting</li>
+                <li><strong>opossum</strong> - Circuit breaker</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>📨 Messaging</h4>
+            <ul>
+                <li><strong>AWS SDK (SQS/SNS)</strong> - Queue & pub/sub</li>
+                <li><strong>LocalStack</strong> - Local AWS</li>
+                <li><strong>Custom Event Bus</strong> - In-memory</li>
+                <li><strong>Bottleneck</strong> - Rate limiting</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>⚙️ Workflow</h4>
+            <ul>
+                <li><strong>Temporal</strong> - Workflow engine</li>
+                <li><strong>Temporal SDK</strong> - TypeScript</li>
+                <li><strong>Temporal Web UI</strong> - Monitoring</li>
+                <li><strong>Docker Compose</strong> - Orchestration</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 14: Project Structure -->
+<div class="slide slide-content">
+    <h2>Project Structure</h2>
+    
+    <div class="two-col">
+        <div>
+            <h3>Frontend (OneG Frontend/)</h3>
+            <div class="diagram" style="font-size: 0.8em;">
+src/
+├── components/     # 30+ feature directories
+│   ├── admin/
+│   ├── auth/
+│   ├── profile/
+│   ├── recruitment/
+│   └── ui/         # shadcn/ui components
+├── hooks/          # 100+ custom hooks
+├── api/            # API client & services
+├── pages/          # 80+ route components
+├── types/          # TypeScript definitions
+├── lib/            # Utilities & configs
+└── test/           # Test files
+            </div>
+        </div>
+        <div>
+            <h3>Backend (OneG Platform/)</h3>
+            <div class="diagram" style="font-size: 0.8em;">
+OneG Platform/
+├── gateway/        # API Gateway (Fastify)
+├── services/       # 18 Microservices
+│   ├── auth-service/
+│   ├── hcm-service/
+│   ├── security-service/
+│   ├── bpm-service/
+│   └── ...
+├── shared/         # Shared libraries
+│   ├── types/
+│   ├── utils/
+│   ├── contracts/
+│   └── event-bus/
+└── infrastructure/ # Docker configs
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 15: Microservice Structure -->
+<div class="slide slide-content">
+    <h2>Microservice Structure</h2>
+    <p>Each microservice follows a consistent structure:</p>
+    
+    <div class="diagram">
+service-name/
+├── src/
+│   ├── controllers/        # Request handlers
+│   ├── services/           # Business logic
+│   ├── repositories/       # Data access layer
+│   ├── models/             # Data models
+│   ├── routes/             # API routes
+│   ├── middleware/         # Service-specific middleware
+│   └── app.ts              # Service entry point
+├── migrations/             # Database migrations
+├── dist/                   # Compiled output
+├── Dockerfile              # Production Docker image
+├── package.json            # Service dependencies
+├── tsconfig.json           # TypeScript configuration
+└── vitest.config.ts        # Test configuration
+    </div>
+    
+    <h3>Shared Packages</h3>
+    <div style="display: flex; gap: 20px; margin-top: 20px;">
+        <span class="badge">@oneg/types</span>
+        <span class="badge">@oneg/utils</span>
+        <span class="badge">@oneg/contracts</span>
+        <span class="badge">@oneg/event-bus</span>
+    </div>
+</div>
+
+<!-- Slide 16: Observability Architecture -->
+<div class="slide slide-content">
+    <h2>Observability Architecture</h2>
+    <p>Three pillars of observability for comprehensive monitoring:</p>
+    
+    <div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│                    OBSERVABILITY STACK                       │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│     LOGS        │    METRICS      │       TRACES            │
+│  (Structured)   │  (Time-series)  │   (Distributed)         │
+├─────────────────┼─────────────────┼─────────────────────────┤
+│ Pino → stdout   │ Prometheus      │ X-Correlation-ID        │
+│ JSON format     │ /metrics        │ Request propagation     │
+│ Correlation IDs │ Custom counters │ Service-to-service      │
+└─────────────────┴─────────────────┴─────────────────────────┘
+    </div>
+    
+    <h3>Correlation ID Flow</h3>
+    <div class="diagram">
+Frontend Request
+      │
+      ▼
+┌─────────────────┐
+│   API Gateway   │ ← Generates X-Correlation-ID if missing
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Microservice   │ ← Reads and propagates correlationId
+└────────┬────────┘   ← Includes in all logs
+         │
+         ▼
+┌─────────────────┐
+│ Another Service │ ← Same correlationId throughout
+└─────────────────┘
+    </div>
+</div>
+
+<!-- Slide 17: Health Checks & Circuit Breakers -->
+<div class="slide slide-content">
+    <h2>Health Checks & Circuit Breakers</h2>
+    
+    <div class="two-col">
+        <div>
+            <h3>Health Check Levels</h3>
+            <table>
+                <tr><th>Level</th><th>Endpoint</th><th>Purpose</th></tr>
+                <tr><td>Liveness</td><td><code>/health/live</code></td><td>Is service running?</td></tr>
+                <tr><td>Readiness</td><td><code>/health/ready</code></td><td>Can handle requests?</td></tr>
+                <tr><td>Full</td><td><code>/health</code></td><td>Detailed with deps</td></tr>
+            </table>
+        </div>
+        <div>
+            <h3>Circuit Breaker States</h3>
+            <table>
+                <tr><th>State</th><th>Behavior</th></tr>
+                <tr><td><span class="highlight">Closed</span></td><td>Normal operation</td></tr>
+                <tr><td><span class="highlight">Open</span></td><td>Fail fast with fallback</td></tr>
+                <tr><td><span class="highlight">Half-Open</span></td><td>Testing recovery</td></tr>
+            </table>
+        </div>
+    </div>
+    
+    <h3>Key Performance Indicators</h3>
+    <table>
+        <tr><th>Metric</th><th>Target</th><th>Alert Threshold</th></tr>
+        <tr><td>API Response Time (p95)</td><td>&lt; 500ms</td><td>&gt; 1000ms</td></tr>
+        <tr><td>Error Rate</td><td>&lt; 1%</td><td>&gt; 5%</td></tr>
+        <tr><td>Availability</td><td>&gt; 99.9%</td><td>&lt; 99.5%</td></tr>
+        <tr><td>Database Query Time (p95)</td><td>&lt; 100ms</td><td>&gt; 500ms</td></tr>
+    </table>
+</div>
+
+<!-- Slide 18: Event Bus & Messaging -->
+<div class="slide slide-content">
+    <h2>Event Bus & Messaging</h2>
+    
+    <h3>Event Naming Convention</h3>
+    <p>Format: <code>{domain}.{entity}.{action}</code></p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
+        <span class="badge">hcm.employee.created</span>
+        <span class="badge">hcm.employee.updated</span>
+        <span class="badge">security.role.assigned</span>
+        <span class="badge">integration.sync.completed</span>
+        <span class="badge">settings.module.enabled</span>
+    </div>
+    
+    <h3>Event Payload Structure</h3>
+    <div class="diagram" style="font-size: 0.85em;">
+{
+  "eventId": "550e8400-e29b-41d4-a716-446655440000",    // Unique event ID
+  "eventType": "hcm.employee.created",                  // Event name
+  "timestamp": "2024-12-23T10:30:00.000Z",             // ISO 8601
+  "correlationId": "req-123-456",                       // Request tracing
+  "tenantId": "tenant-abc",                             // Multi-tenant isolation
+  "version": 1,                                         // Schema version
+  "source": "hcm-service",                              // Emitting service
+  "data": { ... },                                      // Event-specific payload
+  "metadata": { "userId": "user-admin-123" }           // Optional context
+}
+    </div>
+    
+    <h3>Key Principles</h3>
+    <ul>
+        <li><span class="highlight">Idempotent handlers</span> - Use eventId to detect duplicates</li>
+        <li><span class="highlight">Tenant isolation</span> - Always include tenantId</li>
+        <li><span class="highlight">Correlation tracking</span> - Propagate correlationId</li>
+    </ul>
+</div>
+
+<!-- Slide 19: Incident Response -->
+<div class="slide slide-content">
+    <h2>Incident Response</h2>
+    
+    <h3>Severity Levels</h3>
+    <table>
+        <tr><th>Level</th><th>Description</th><th>Response Time</th><th>Examples</th></tr>
+        <tr><td><span class="highlight">SEV1</span></td><td>Complete outage</td><td>15 minutes</td><td>All services down, data loss</td></tr>
+        <tr><td><span class="highlight">SEV2</span></td><td>Major degradation</td><td>30 minutes</td><td>Core feature unavailable</td></tr>
+        <tr><td><span class="highlight">SEV3</span></td><td>Minor degradation</td><td>2 hours</td><td>Non-critical feature affected</td></tr>
+        <tr><td><span class="highlight">SEV4</span></td><td>Low impact</td><td>24 hours</td><td>Cosmetic issues, minor bugs</td></tr>
+    </table>
+    
+    <h3>Recovery Objectives</h3>
+    <div class="grid">
+        <div class="card">
+            <h4>RTO (Recovery Time Objective)</h4>
+            <p style="font-size: 2em; color: #667eea;">4 hours</p>
+            <p>Maximum time to restore service</p>
+        </div>
+        <div class="card">
+            <h4>RPO (Recovery Point Objective)</h4>
+            <p style="font-size: 2em; color: #667eea;">1 hour</p>
+            <p>Maximum acceptable data loss</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 20: Service Ports Reference -->
+<div class="slide slide-content">
+    <h2>Service Ports Reference</h2>
+    
+    <div class="two-col">
+        <div>
+            <table>
+                <tr><th>Service</th><th>Port</th><th>Schema</th></tr>
+                <tr><td>Gateway</td><td>3000</td><td>-</td></tr>
+                <tr><td>Auth Service</td><td>3001</td><td>auth</td></tr>
+                <tr><td>HCM Service</td><td>3002</td><td>hcm</td></tr>
+                <tr><td>Security Service</td><td>3003</td><td>security</td></tr>
+                <tr><td>Recruitment Service</td><td>3004</td><td>recruitment</td></tr>
+                <tr><td>Compensation Service</td><td>3005</td><td>compensation</td></tr>
+                <tr><td>Benefits Service</td><td>3007</td><td>benefits</td></tr>
+                <tr><td>TimeOff Service</td><td>3008</td><td>timeoff</td></tr>
+                <tr><td>TimeTracking Service</td><td>3009</td><td>timetracking</td></tr>
+            </table>
+        </div>
+        <div>
+            <table>
+                <tr><th>Service</th><th>Port</th><th>Schema</th></tr>
+                <tr><td>Payroll Service</td><td>3010</td><td>payroll</td></tr>
+                <tr><td>Talent Service</td><td>3011</td><td>talent</td></tr>
+                <tr><td>Learning Service</td><td>3012</td><td>learning</td></tr>
+                <tr><td>Reports Service</td><td>3013</td><td>reports</td></tr>
+                <tr><td>Ticketing Service</td><td>3014</td><td>ticketing</td></tr>
+                <tr><td>BPM Service</td><td>3015</td><td>bpm</td></tr>
+                <tr><td>Notification Service</td><td>3016</td><td>notification</td></tr>
+                <tr><td>Audit Service</td><td>3017</td><td>audit</td></tr>
+                <tr><td>Settings Service</td><td>3018</td><td>settings</td></tr>
+                <tr><td>Integration Service</td><td>3019</td><td>integration</td></tr>
+            </table>
+        </div>
+    </div>
+    
+    <h3>Infrastructure Services</h3>
+    <div style="display: flex; gap: 30px; margin-top: 20px;">
+        <div class="card" style="flex: 1;">
+            <h4>Frontend</h4>
+            <p><code>http://localhost:8080</code></p>
+        </div>
+        <div class="card" style="flex: 1;">
+            <h4>LocalStack</h4>
+            <p><code>http://localhost:4566</code></p>
+        </div>
+        <div class="card" style="flex: 1;">
+            <h4>Temporal UI</h4>
+            <p><code>http://localhost:8080</code></p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 21: API Standards -->
+<div class="slide slide-content">
+    <h2>API Standards</h2>
+    
+    <div class="two-col">
+        <div>
+            <h3>Success Response</h3>
+            <div class="diagram" style="font-size: 0.85em;">
+{
+  "data": { ... },
+  "pagination": {
+    "page": 1,
+    "pageSize": 20,
+    "totalItems": 100,
+    "totalPages": 5
+  },
+  "meta": {
+    "correlationId": "...",
+    "timestamp": "..."
+  }
+}
+            </div>
+        </div>
+        <div>
+            <h3>Error Response</h3>
+            <div class="diagram" style="font-size: 0.85em;">
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input",
+    "details": [...],
+    "correlationId": "...",
+    "timestamp": "..."
+  }
+}
+            </div>
+        </div>
+    </div>
+    
+    <h3>Standard Error Codes</h3>
+    <table>
+        <tr><th>Code</th><th>HTTP</th><th>Description</th></tr>
+        <tr><td>VALIDATION_ERROR</td><td>400</td><td>Request validation failed</td></tr>
+        <tr><td>UNAUTHORIZED</td><td>401</td><td>Authentication required</td></tr>
+        <tr><td>FORBIDDEN</td><td>403</td><td>Insufficient permissions</td></tr>
+        <tr><td>NOT_FOUND</td><td>404</td><td>Resource not found</td></tr>
+        <tr><td>MODULE_DISABLED</td><td>403</td><td>Module is disabled for tenant</td></tr>
+    </table>
+</div>
+
+<!-- Slide 22: Running the Application -->
+<div class="slide slide-content">
+    <h2>Running the Application</h2>
+    
+    <div class="two-col">
+        <div>
+            <h3>Frontend Development</h3>
+            <div class="diagram" style="font-size: 0.9em;">
+# Navigate to frontend
+cd "OneG Frontend"
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Available at http://localhost:8080
+            </div>
+        </div>
+        <div>
+            <h3>Backend Development</h3>
+            <div class="diagram" style="font-size: 0.9em;">
+# Navigate to platform
+cd "OneG Platform/infrastructure"
+
+# Copy environment variables
+cp .env.example .env
+
+# Start all services
+docker-compose -f docker-compose.local.yml up -d
+
+# Gateway at http://localhost:3000
+            </div>
+        </div>
+    </div>
+    
+    <h3>Environment Configuration</h3>
+    <div class="two-col">
+        <div class="card">
+            <h4>Frontend (.env)</h4>
+            <div class="diagram" style="font-size: 0.8em;">
+VITE_API_GATEWAY_URL=http://localhost:3000
+VITE_API_TIMEOUT=30000
+# NO Supabase credentials!
+            </div>
+        </div>
+        <div class="card">
+            <h4>Backend (.env)</h4>
+            <div class="diagram" style="font-size: 0.8em;">
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_key
+JWT_SECRET=your_jwt_secret
+ENCRYPTION_KEY=your_encryption_key
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 23: Key Features Summary -->
+<div class="slide slide-content">
+    <h2>Key Features Summary</h2>
+    
+    <div class="grid">
+        <div class="card">
+            <h4>🎨 User Experience</h4>
+            <ul>
+                <li>Responsive design</li>
+                <li>Dark mode support</li>
+                <li>WCAG accessibility</li>
+                <li>Real-time notifications</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>⚡ Performance</h4>
+            <ul>
+                <li>TanStack Query caching</li>
+                <li>Lazy loading</li>
+                <li>Code splitting</li>
+                <li>Database optimization</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🔒 Security</h4>
+            <ul>
+                <li>Multi-tenant isolation</li>
+                <li>PII encryption</li>
+                <li>XSS protection</li>
+                <li>Row-level security</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>🌍 Internationalization</h4>
+            <ul>
+                <li>20+ languages</li>
+                <li>RTL support</li>
+                <li>Date/currency localization</li>
+                <li>Translation caching</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h3>Target Platforms</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+        <span class="badge">Web Application (SPA)</span>
+        <span class="badge">Modern Browsers (ES6+)</span>
+        <span class="badge">Mobile Responsive</span>
+        <span class="badge">PWA Capabilities</span>
+    </div>
+</div>
+
+<!-- Slide 24: Deployment Checklist -->
+<div class="slide slide-content">
+    <h2>Deployment Checklist</h2>
+    
+    <div class="two-col">
+        <div class="card">
+            <h4>✅ Pre-Deployment</h4>
+            <ul>
+                <li>☐ All tests passing</li>
+                <li>☐ Database migrations tested in staging</li>
+                <li>☐ Feature flags configured</li>
+                <li>☐ Rollback plan documented</li>
+                <li>☐ Monitoring dashboards updated</li>
+                <li>☐ Alert thresholds reviewed</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>✅ Post-Deployment</h4>
+            <ul>
+                <li>☐ Health checks passing</li>
+                <li>☐ Error rates normal</li>
+                <li>☐ Response times normal</li>
+                <li>☐ Key business flows verified</li>
+                <li>☐ Logs reviewed for errors</li>
+                <li>☐ Stakeholders notified</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h3>Backup Strategy</h3>
+    <table>
+        <tr><th>Type</th><th>Frequency</th><th>Retention</th><th>Purpose</th></tr>
+        <tr><td>Point-in-time</td><td>Continuous</td><td>7 days</td><td>Granular recovery</td></tr>
+        <tr><td>Daily snapshot</td><td>Daily</td><td>30 days</td><td>Daily restore point</td></tr>
+        <tr><td>Weekly snapshot</td><td>Weekly</td><td>90 days</td><td>Long-term recovery</td></tr>
+    </table>
+</div>
+
+<!-- Slide 25: Thank You -->
+<div class="slide slide-title" style="text-align: center; justify-content: center;">
+    <h1 style="font-size: 4em; -webkit-text-fill-color: white;">Thank You</h1>
+    <p class="subtitle" style="color: white; margin-top: 30px;">OneG HCM Platform</p>
+    <p style="margin-top: 40px; font-size: 1.3em; color: rgba(255,255,255,0.8);">Enterprise Human Capital Management System</p>
+    
+    <div style="margin-top: 60px; display: flex; justify-content: center; gap: 40px;">
+        <div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9em;">Frontend</p>
+            <p style="color: white;">localhost:8080</p>
+        </div>
+        <div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9em;">API Gateway</p>
+            <p style="color: white;">localhost:3000</p>
+        </div>
+        <div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9em;">Temporal UI</p>
+            <p style="color: white;">localhost:8080</p>
+        </div>
+    </div>
+    
+    <div style="margin-top: 50px;">
+        <span class="badge">18 Microservices</span>
+        <span class="badge">13+ Modules</span>
+        <span class="badge">Multi-Tenant</span>
+        <span class="badge">Enterprise Ready</span>
+    </div>
+</div>
+
+</body>
+</html>
